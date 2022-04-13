@@ -20,8 +20,8 @@ public class MarcService {
     @Transactional
     public void saveMarc(SaveMarcRequest request) {
         request.getData().forEach(row -> {
-            log.error(row.getMARC());
-            Marc marc = Marc.createMarc(row.getMARC());
+            log.error(row.getMarc());
+            Marc marc = Marc.createMarc(row.getMarc());
                 marcRepository.save(marc);
         });
     }
