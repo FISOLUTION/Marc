@@ -16,4 +16,8 @@ public class MarcRepository {
     public Optional<Marc> findOne(Long id) {
         return Optional.ofNullable(em.find(Marc.class, id));
     }
+
+    public void save(Marc content){
+        em.persist(content);
+    }
 }

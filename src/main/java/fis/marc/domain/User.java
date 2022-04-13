@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,7 +22,7 @@ public class User {
     private Authority auth;     // 권한
 
     @OneToMany(mappedBy = "user")
-    private List<Process> processes;
+    private List<Process> processes = new ArrayList<>();
 
 
 }
