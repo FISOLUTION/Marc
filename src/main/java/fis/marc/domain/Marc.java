@@ -21,7 +21,7 @@ public class Marc {
     private String content;     // marc 내용
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parsed_marc")
+    @JoinColumn(name = "parsed_id")
     private ParsedMarc parsedMarc;
 
     public static Marc createMarc(String content) {
