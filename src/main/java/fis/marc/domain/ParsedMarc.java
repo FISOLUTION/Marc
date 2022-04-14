@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -15,6 +16,7 @@ import javax.persistence.Id;
 public class ParsedMarc {
 
     @Id @GeneratedValue
+    @Column(name = "parsed_id")
     private Long id;
 
     private String leader;      // leader 정보

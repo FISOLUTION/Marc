@@ -18,6 +18,8 @@ public class User {
     @GeneratedValue @Id
     private Long id;
 
+    private String username;
+
     @Enumerated
     private Authority auth;     // 권한
 
