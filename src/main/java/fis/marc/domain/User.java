@@ -16,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 public class User {
     @GeneratedValue @Id
+    @Column(name = "user_id")
     private Long id;
 
     private String username;
