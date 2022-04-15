@@ -12,19 +12,21 @@ import javax.persistence.*;
 @Entity
 @Slf4j
 public class Process {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
+    @Column(name = "process_id")
     private Long id;
 
     private String createdDate; // 생성시점
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private Status status;      // 현재 공정 상태
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="marc")
+    @JoinColumn(name="marc_id")
     private Marc marc;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="user")
+    @JoinColumn(name="user_id")
     private User user;
 }
