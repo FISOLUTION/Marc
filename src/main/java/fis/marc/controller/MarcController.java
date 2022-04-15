@@ -28,4 +28,9 @@ public class MarcController {
     public ParseOneResponse viewOne() {
         return marcService.parseOne();
     }
+
+    @GetMapping("/test")
+    public void test() {
+        marcService.test();
+    }
 }

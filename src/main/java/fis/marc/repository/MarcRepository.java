@@ -27,4 +27,9 @@ public class MarcRepository {
                 .getResultList();
         return marcList.get(0);
     }
+
+    public List<Marc> findAll() {
+        return em.createQuery("select m from Marc m", Marc.class)
+                .getResultList();
+    }
 }
