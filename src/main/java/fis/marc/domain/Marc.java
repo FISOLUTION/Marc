@@ -4,6 +4,7 @@ import fis.marc.dto.SaveMarcRequest;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
@@ -14,19 +15,21 @@ import javax.persistence.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Marc {
     @GeneratedValue
-    @Id
+    @Id @Column(name = "marc_id")
     private Long id;
 
     @Lob
-    private String content;     // marc 내용
+    private String origin;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parsed_id")
-    private ParsedMarc parsedMarc;
+    @Lob
+    private String worked;
 
-    public static Marc createMarc(String content) {
+    @Lob
+    private String checked;
+
+    public static Marc createMarc(String origin) {
         Marc marc = new Marc();
-        marc.content = content;
+        marc.origin = origin;
         return marc;
     }
 }

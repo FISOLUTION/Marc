@@ -19,8 +19,7 @@ public class MarcController {
     private final MarcService marcService;
 
     @PostMapping("/marc")
-    public void saveMarc(@RequestBody SaveMarcRequest request) {
-        log.warn("{}", request.getData());
+    public void saveMarc(@RequestBody SaveMarcRequest request) { // 원본 Marc 업로드
         marcService.saveMarc(request);
     }
 
