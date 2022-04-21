@@ -3,6 +3,7 @@ package fis.marc.controller;
 import fis.marc.domain.Marc;
 import fis.marc.dto.ParseOneResponse;
 import fis.marc.dto.SaveMarcRequest;
+import fis.marc.repository.MarcRepository;
 import fis.marc.service.MarcService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,12 +12,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @Slf4j
 @RequiredArgsConstructor
 public class MarcController {
 
     private final MarcService marcService;
+    private final MarcRepository marcRepository;
 
     @PostMapping("/marc")
     public void saveMarc(@RequestBody SaveMarcRequest request) { // 원본 Marc 업로드
