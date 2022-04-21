@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class MarcService {
         request.getData().forEach(row -> {
             log.error(row.getMarc());
             Marc marc = Marc.createMarc(row.getMarc());
-                marcRepository.save(marc);
+            marcRepository.save(marc);
         });
     }
 
@@ -68,4 +67,5 @@ public class MarcService {
         ParseOneResponse parseOneResponse = new ParseOneResponse(Leader, DirectoryList, DataList);
         return parseOneResponse;
     }
+
 }
