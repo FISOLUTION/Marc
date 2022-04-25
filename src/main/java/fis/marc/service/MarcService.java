@@ -27,7 +27,7 @@ public class MarcService {
         request.getData().forEach(row -> {
             log.error(row.getMarc());
             Marc marc = Marc.createMarc(row.getMarc());
-               marcRepository.saveOrigin(marc);
+            marcRepository.saveOrigin(marc);
         });
     }
 
