@@ -32,5 +32,9 @@ public class Marc {
         marc.origin = origin;
         return marc;
     }
+
+    public void updateWorked(String worked) {
+        this.worked = worked;
+    }
 }
 
