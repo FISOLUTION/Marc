@@ -18,7 +18,11 @@ public class MarcRepository {
         return Optional.ofNullable(em.find(Marc.class, id));
     }
 
-    public void save(Marc content){
+    public void saveOrigin(Marc content){
+        em.persist(content);
+    }
+
+    public void saveWorked(Marc content){
         em.persist(content);
     }
 

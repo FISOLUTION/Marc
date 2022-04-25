@@ -27,6 +27,10 @@ public class Process {
     private Marc marc;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="user_id")
-    private User user;
+    @JoinColumn(name="worker_id")
+    private User user; // 입력자
+
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name="checker_id")
+//    private User user2; // 검수자
 }
