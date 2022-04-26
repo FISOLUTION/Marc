@@ -1,16 +1,24 @@
 package fis.marc.service;
 
 import fis.marc.domain.Marc;
+import fis.marc.domain.Process;
+import fis.marc.domain.User;
+import fis.marc.domain.enumType.Status;
 import fis.marc.dto.InputMarcRequest;
 import fis.marc.dto.ParseOneResponse;
 import fis.marc.dto.SaveMarcRequest;
 import fis.marc.repository.MarcRepository;
+import fis.marc.repository.ProcessRepository;
+import fis.marc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 
@@ -21,27 +29,65 @@ import java.util.Optional;
 public class MarcService {
 
     private final MarcRepository marcRepository;
+    private final UserRepository userRepository;
+    private final ProcessRepository processRepository;
 
     @Transactional
     public void saveOrigin(SaveMarcRequest request) {
+        User user = userRepository.findOne(request.getUserId()).orElseGet(null);
         request.getData().forEach(row -> {
             log.error(row.getMarc());
             Marc marc = Marc.createMarc(row.getMarc());
             marcRepository.saveOrigin(marc);
+            Process process = new Process(LocalDate.now().toString(), Status.Upload, marc, user);
+            processRepository.saveProcess(process);
         });
     }
 
     @Transactional
-    public void saveWorked(Long id, String str) {
-        Optional<Marc> marc = marcRepository.findOne(id);
-        Marc marc1 = marc.get();
-        marc1.updateWorked(str);
+    public void saveWorked(Long marcId, Long userId, String str) {
+        Optional<Marc> findMarc = marcRepository.findOne(marcId);
+        Optional<User> findUser = userRepository.findOne(userId);
+        Marc marc = findMarc.orElse(null);
+        marc.updateWorked(str);
+        Process process = new Process(LocalDate.now().toString(), Status.Input, marc, findUser.orElse(null));
+        processRepository.saveProcess(process);
     }
 
     @Transactional
-    public ParseOneResponse parseOne() {
-        Marc oneOfAll = marcRepository.findOneOfAll();
-        String contents = oneOfAll.getOrigin();
+    public void saveChecked(Long marcId, Long userId, String result, String comment) {
+        Optional<Marc> findMarc = marcRepository.findOne(marcId);
+        Optional<User> findUser = userRepository.findOne(userId);
+        Marc marc = findMarc.orElse(null);
+        marc.updateChecked(result);
+        marc.updateComment(comment);
+        Process process = new Process(LocalDate.now().toString(), Status.Check, marc, findUser.orElse(null));
+        processRepository.saveProcess(process);
+    }
+
+    public ParseOneResponse parseOriginOne() {
+        Marc oneOfAll = marcRepository.findOneOriginRandom();
+        return parse(oneOfAll.getOrigin());
+    }
+
+    public ParseOneResponse findParseOriginOne(Long id) {
+        Optional<Marc> findMarc = marcRepository.findOne(id);
+        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 marc 아이디"));
+        return parse(marc.getOrigin());
+    }
+
+    public ParseOneResponse parseCheckedOne() {
+        Marc oneOfAll = marcRepository.findOneCheckedRandom();
+        return parse(oneOfAll.getWorked());
+    }
+
+    public ParseOneResponse findParseCheckedOne(Long id) {
+        Optional<Marc> findMarc = marcRepository.findOne(id);
+        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 marc 아이디"));
+        return parse(marc.getWorked());
+    }
+
+    private ParseOneResponse parse(String contents) {
         byte[] contentsBytes = contents.getBytes();
         int leaderBytes = 24;
 
@@ -76,34 +122,19 @@ public class MarcService {
             field_length_List.add(field_length);
             field_start_List.add(field_start);
             indicator_List.add(indicator);
-            if (Integer.parseInt(indicator) > 10) {
-                char a;
-                char b;
-                if (str.charAt(0) == ' ' && str.charAt(1) == ' ') {
-                    System.out.println("지시기호 = " + str.substring(0, 2));
-                } else {
-                    if (str.charAt(0) == ' ') {
-                        a = '※';
-                    } else {
-                        a = str.charAt(0);
-                    }
-                    if (str.charAt(1) == ' ') {
-                        b = '※';
-                    } else {
-                        b = str.charAt(1);
-                    }
-                    System.out.println("지시기호= " + a + b);
-                }
-            }
         }
         ParseOneResponse parseOneResponse = new ParseOneResponse(Leader, DirectoryList, DataList, field_length_List, field_start_List, indicator_List);
         return parseOneResponse;
     }
 
-    @Transactional
     public String combine(InputMarcRequest inputMarcRequest) {
         int startPosition = 0;
-
+        Optional<Marc> one = marcRepository.findOne(inputMarcRequest.getMarc_id());
+        Marc marc = one.orElseGet(null);
+        byte[] contentsBytes = marc.getOrigin().getBytes();
+        int leaderBytes = 24;
+        String leader = new String(contentsBytes, 0, leaderBytes);
+        StringBuilder Leader = new StringBuilder(leader);
         List<InputMarcRequest.InputMarcDto> dataList = inputMarcRequest.getDataList();
         StringBuilder newDirectory = new StringBuilder();
         StringBuilder newData = new StringBuilder();
@@ -124,8 +155,8 @@ public class MarcService {
 
             startPosition += field_length;
         }
-        System.out.println("조합된 MARC 데이터 값 = " + (newDirectory.append(newData)));
-        return (newDirectory.append(newData)).toString();
+        newDirectory.append("\u001e");
+        return ((Leader.append(newDirectory.append(newData))).append("\u001d")).toString();
     }
 }
 

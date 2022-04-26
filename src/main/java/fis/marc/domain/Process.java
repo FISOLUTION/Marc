@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.persistence.*;
 
 @Getter
-@NoArgsConstructor
 @Entity
 @Slf4j
 public class Process {
@@ -28,9 +27,21 @@ public class Process {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="worker_id")
-    private User user; // 입력자
+    private User user; // 입력자, 검수자
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name="checker_id")
-//    private User user2; // 검수자
+    public void updateUser(User user) {
+        this.user = user;
+    }
+
+    protected Process() {
+
+    }
+
+    public Process(String createdDate, Status status, Marc marc, User user) {
+        this.createdDate = createdDate;
+        this.status = status;
+        this.marc = marc;
+        this.user = user;
+        user.getProcesses().add(this);
+    }
 }

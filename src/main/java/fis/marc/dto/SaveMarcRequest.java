@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SaveMarcRequest {
+    private Long userId;
     private List<MarcDto> data = new ArrayList<>();
 
     @Data

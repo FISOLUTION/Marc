@@ -10,6 +10,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class InputMarcRequest {
     private Long marc_id;
     private List<InputMarcDto> dataList = new ArrayList<>();

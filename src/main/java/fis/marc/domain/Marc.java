@@ -19,13 +19,15 @@ public class Marc {
     private Long id;
 
     @Lob
-    private String origin;
+    private String origin; // 원본
 
     @Lob
-    private String worked;
+    private String worked; // 입력 후
 
     @Lob
-    private String checked;
+    private String checked; // 검수 후
+
+    private String comment;
 
     public static Marc createMarc(String origin) {
         Marc marc = new Marc();
@@ -35,6 +37,14 @@ public class Marc {
 
     public void updateWorked(String worked) {
         this.worked = worked;
+    }
+
+    public void updateChecked(String checked) {
+        this.checked = checked;
+    }
+
+    public void updateComment(String comment) {
+        this.comment = comment;
     }
 }
 
