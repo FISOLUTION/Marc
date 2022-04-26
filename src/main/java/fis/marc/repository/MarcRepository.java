@@ -4,7 +4,6 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import fis.marc.domain.Marc;
-import fis.marc.domain.QMarc;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +11,6 @@ import javax.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 
-import static fis.marc.domain.QMarc.marc;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,10 +31,20 @@ public class MarcRepository {
         em.persist(content);
     }
 
-    public Marc findOneOfAll() {
-        List<Marc> marcList = em.createQuery("select m from Marc m", Marc.class)
+    public Marc findOneOriginRandom() {
+        List<Marc> marcList = em.createQuery(
+                "select m from Marc m where m.worked is null and m.checked is null",
+                        Marc.class)
                 .getResultList();
         return marcList.get(0);
+    }
+
+    public Marc findOneCheckedRandom() {
+        List<Marc> marcList = em.createQuery(
+                "select m from Marc m where m.worked is not null and m.checked is null",
+                        Marc.class)
+                .getResultList();
+        return marcList.get(0); // 조회할 게 없을 때 예외처리 필요함.
     }
 
     public List<Marc> findAll() {
