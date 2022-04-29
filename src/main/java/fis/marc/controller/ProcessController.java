@@ -16,12 +16,12 @@ public class ProcessController {
     private final ProcessService processService;
 
     @GetMapping("/marc/input/worklist/{userid}")
-    public WorkListResponse viewWorkList(@PathVariable("userid") Long userId) {
+    public WorkListResponse viewWorkList(@PathVariable("userid") Long userId) throws IllegalAccessException {
         return processService.findAllByUserId(userId);
     } // 입력 페이지 작업 목록 조회
 
     @GetMapping("/process")
     public ProcessStatusResponse processStatusResponse() {
         return processService.findAllProcessStatus();
-    }
+    } // 작업 현황 조회
 }

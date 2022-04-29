@@ -3,10 +3,12 @@ package fis.marc.service;
 import fis.marc.domain.Marc;
 import fis.marc.domain.Process;
 import fis.marc.domain.User;
+import fis.marc.domain.enumType.Authority;
 import fis.marc.domain.enumType.Status;
 import fis.marc.dto.InputMarcRequest;
 import fis.marc.dto.ParseOneResponse;
 import fis.marc.dto.SaveMarcRequest;
+import fis.marc.exception.NoExistParsableException;
 import fis.marc.repository.MarcRepository;
 import fis.marc.repository.ProcessRepository;
 import fis.marc.repository.UserRepository;
@@ -48,43 +50,87 @@ public class MarcService {
     public void saveWorked(Long marcId, Long userId, String str) {
         Optional<Marc> findMarc = marcRepository.findOne(marcId);
         Optional<User> findUser = userRepository.findOne(userId);
-        Marc marc = findMarc.orElse(null);
+        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 Marc 데이터"));
+        User user = findUser.orElseThrow(() -> new NoSuchElementException("존재하지 않는 User"));
         marc.updateWorked(str);
-        Process process = new Process(LocalDate.now().toString(), Status.Input, marc, findUser.orElse(null));
-        processRepository.saveProcess(process);
+        List<Process> modifiesByMarc = processRepository.findModifyOneByMarc(marc);
+        if (modifiesByMarc.isEmpty()) {
+            Process process = new Process(LocalDate.now().toString(), Status.Input, marc, user);
+            processRepository.saveProcess(process); // 저장
+        } else {
+            modifiesByMarc.forEach((process) -> {
+                process.updateStatus(Status.Input);
+            });
+        }
     }
 
     @Transactional
     public void saveChecked(Long marcId, Long userId, String result, String comment) {
         Optional<Marc> findMarc = marcRepository.findOne(marcId);
         Optional<User> findUser = userRepository.findOne(userId);
-        Marc marc = findMarc.orElse(null);
-        marc.updateChecked(result);
+        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 Marc 데이터"));
+        User user = findUser.orElseThrow(() -> new NoSuchElementException("존재하지 않는 User"));
+        Optional<Process> findProcess = processRepository.findWorkedOneByMarc(marc);
+        findProcess.orElseThrow(() -> new IllegalStateException("수정 요청한 데이터입니다. 수정이 완료되면 검수바랍니다."));
+        findProcess.ifPresent((process) -> {
+            processRepository.saveProcess(new Process(LocalDate.now().toString(), Status.Check, marc, user));
+            marc.updateChecked(result);
+            if (comment != null) {
+                marc.updateComment(comment);
+            }
+        });
+    }
+
+    @Transactional
+    public void updateModifyState(Long marcId, Long userId, String comment) {
+        Marc marc = marcRepository.findOne(marcId).orElse(null);
+        User user = userRepository.findOne(userId).orElse(null);
+
         marc.updateComment(comment);
-        Process process = new Process(LocalDate.now().toString(), Status.Check, marc, findUser.orElse(null));
-        processRepository.saveProcess(process);
+
+        processRepository.findWorkedOneByMarc(marc).ifPresent((process -> {
+            process.updateStatus(Status.Modify);
+            process.updateChecker(user);
+        })); // input 상태인 마크 데이터를 modify 상태로 바꾸고 checker 정보를 업데이트
+
     }
 
     public ParseOneResponse parseOriginOne() {
-        Marc oneOfAll = marcRepository.findOneOriginRandom();
-        return parse(oneOfAll.getOrigin());
+        Marc oneOfAll = marcRepository.findOneOriginRandom()
+                .orElseThrow(() -> new NoExistParsableException("파싱할 origin 데이터가 없음"));
+        ParseOneResponse response = parse(oneOfAll.getOrigin());
+        response.setComment(oneOfAll.getComment()); // comment 있으면 보여줌
+        return response;
     }
 
     public ParseOneResponse findParseOriginOne(Long id) {
-        Optional<Marc> findMarc = marcRepository.findOne(id);
-        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 marc 아이디"));
-        return parse(marc.getOrigin());
+        Marc marc = marcRepository.findOne(id)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 marc 아이디"));
+        ParseOneResponse response = parse(marc.getOrigin());
+        response.setComment(marc.getComment());
+        return response;
     }
 
     public ParseOneResponse parseCheckedOne() {
-        Marc oneOfAll = marcRepository.findOneCheckedRandom();
-        return parse(oneOfAll.getWorked());
+
+        Marc oneOfAll = marcRepository.findOneCheckedRandom()
+                .orElseThrow(() -> new NoExistParsableException("파싱할 origin 데이터가 없음"));
+        ParseOneResponse response = parse(oneOfAll.getWorked());
+        response.setComment(oneOfAll.getComment());
+        return response;
     }
 
     public ParseOneResponse findParseCheckedOne(Long id) {
         Optional<Marc> findMarc = marcRepository.findOne(id);
         Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 marc 아이디"));
-        return parse(marc.getWorked());
+        if (marc.getWorked() == null) {
+            log.error("검수페이지에서 입력이 안 된 marc 데이터를 조회");
+        }
+        if (marc.getChecked() == null) {
+            return parse(marc.getWorked());
+        } else {
+            return parse(marc.getChecked());
+        }
     }
 
     private ParseOneResponse parse(String contents) {
@@ -113,7 +159,15 @@ public class MarcService {
             String indicator = Directory.substring(i, i + 3);
             int field_length = Integer.parseInt(Directory.substring(i + 3, i + 7));
             int field_start = Integer.parseInt(Directory.substring(i + 7, i + 12));
-            String str = new String(Data.getBytes(), field_start, field_length);
+            String str = null;
+            try {
+                str = new String(Data.getBytes(), field_start, field_length);
+            } catch (StringIndexOutOfBoundsException e) {
+                e.printStackTrace();
+                DataList.clear();
+                DataList.add(Data);
+                break;
+            }
             System.out.println("================================================");
             System.out.println("디렉토리개별값 = " + Directory.substring(i, i + 12));
             System.out.println("DATA 파싱값 = " + str);
@@ -123,7 +177,7 @@ public class MarcService {
             field_start_List.add(field_start);
             indicator_List.add(indicator);
         }
-        ParseOneResponse parseOneResponse = new ParseOneResponse(Leader, DirectoryList, DataList, field_length_List, field_start_List, indicator_List);
+        ParseOneResponse parseOneResponse = new ParseOneResponse(Leader, DirectoryList, DataList, field_length_List, field_start_List, indicator_List, null);
         return parseOneResponse;
     }
 
