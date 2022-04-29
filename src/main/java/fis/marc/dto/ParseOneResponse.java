@@ -15,4 +15,6 @@ public class ParseOneResponse {
     private List<Integer> field_length_List;
     private List<Integer> field_start_List;
     private List<String> indicator_List;
+
+    private String comment;
 }

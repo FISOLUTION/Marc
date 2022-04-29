@@ -20,15 +20,17 @@ public class SearchWorkerResponse {
     private String phnum;
     private int workingAmount;
     private Long averageWorkingAmount;
-    private Long rejectedRate;
+    private Double rejectedRate;
     private List<TendencyDto> tendency = new ArrayList<>();
 
-    private static class TendencyDto {
+    @Data
+    @AllArgsConstructor
+    public static class TendencyDto {
         private String date;
         private int workingAmount;
     }
 
-    public SearchWorkerResponse(Long userId, String nickname, String pwd, Authority auth, String username, String address, String phnum, int workingAmount, Long averageWorkingAmount) {
+    public SearchWorkerResponse(Long userId, String nickname, String pwd, Authority auth, String username, String address, String phnum, int workingAmount, Long averageWorkingAmount, Double rejectedRate) {
         this.userId = userId;
         this.nickname = nickname;
         this.pwd = pwd;
@@ -38,5 +40,6 @@ public class SearchWorkerResponse {
         this.phnum = phnum;
         this.workingAmount = workingAmount;
         this.averageWorkingAmount = averageWorkingAmount;
+        this.rejectedRate = rejectedRate;
     }
 }

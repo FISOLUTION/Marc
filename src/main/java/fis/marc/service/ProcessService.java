@@ -24,7 +24,9 @@ public class ProcessService {
     private final UserRepository userRepository;
 
     @Transactional
-    public WorkListResponse findAllByUserId(Long userId) {
+    public WorkListResponse findAllByUserId(Long userId) throws IllegalAccessException {
+        userRepository.findOne(userId).orElseThrow(() -> new IllegalAccessException("존재하지 않는 유저아이디"));
+
         WorkListResponse workList = new WorkListResponse();
         List<Process> resultList = processRepository.findAllByUserId(userId);
         resultList.forEach((result) -> {

@@ -1,7 +1,5 @@
 package fis.marc.repository;
 
-import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import fis.marc.domain.Marc;
 import lombok.RequiredArgsConstructor;
@@ -31,20 +29,20 @@ public class MarcRepository {
         em.persist(content);
     }
 
-    public Marc findOneOriginRandom() {
+    public Optional<Marc> findOneOriginRandom() {
         List<Marc> marcList = em.createQuery(
                 "select m from Marc m where m.worked is null and m.checked is null",
                         Marc.class)
                 .getResultList();
-        return marcList.get(0);
+        return marcList.stream().findAny(); // 조회할 게 없을 때 예외처리 필요함.
     }
 
-    public Marc findOneCheckedRandom() {
+    public Optional<Marc> findOneCheckedRandom() {
         List<Marc> marcList = em.createQuery(
                 "select m from Marc m where m.worked is not null and m.checked is null",
                         Marc.class)
                 .getResultList();
-        return marcList.get(0); // 조회할 게 없을 때 예외처리 필요함.
+        return marcList.stream().findAny(); // 조회할 게 없을 때 예외처리 필요함.
     }
 
     public List<Marc> findAll() {

@@ -2,7 +2,6 @@ package fis.marc.domain;
 
 import fis.marc.domain.enumType.Status;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
@@ -27,10 +26,18 @@ public class Process {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="worker_id")
-    private User user; // 입력자, 검수자
+    private User user; // 입력자 or 검수자
 
-    public void updateUser(User user) {
-        this.user = user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="checker_id")
+    private User checker; // modify 상태일 때 검수자
+
+    public void updateStatus(Status status) {
+        this.status = status;
+    }
+
+    public void updateChecker(User checker) {
+        this.checker = checker;
     }
 
     protected Process() {
