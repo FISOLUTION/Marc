@@ -132,7 +132,7 @@ public class MarcService {
         Optional<Marc> findMarc = marcRepository.findOne(id);
         Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 marc 아이디"));
         if (marc.getWorked() == null) {
-            log.error("검수페이지에서 입력이 안 된 marc 데이터를 조회");
+            throw new NoExistParsableException("검수페이지에서 입력이 안 된 marc 데이터를 조회");
         }
         if (marc.getChecked() == null) {
             return parse(marc.getWorked());
@@ -158,11 +158,6 @@ public class MarcService {
         List<Integer> field_start_List = new ArrayList<>();
         List<String> indicator_List = new ArrayList<>();
 
-        System.out.println("dataStart = " + dataStart);
-        System.out.println("contentsBytes.length = " + contentsBytes.length);
-        System.out.println("Leader.getBytes().length = " + Leader.getBytes().length);
-        System.out.println("Directory.getBytes().length = " + Directory.getBytes().length);
-        System.out.println("Data.getBytes().length = " + Data.getBytes().length);
         for (int i = 0; i < dataStart-directoryStart-1; i+=12) {
             String indicator = Directory.substring(i, i + 3);
             int field_length = Integer.parseInt(Directory.substring(i + 3, i + 7));
@@ -176,9 +171,6 @@ public class MarcService {
                 DataList.add(Data);
                 break;
             }
-            System.out.println("================================================");
-            System.out.println("디렉토리개별값 = " + Directory.substring(i, i + 12));
-            System.out.println("DATA 파싱값 = " + str);
             DirectoryList.add(Directory.substring(i, i + 12));
             DataList.add(str);
             field_length_List.add(field_length);
@@ -202,12 +194,8 @@ public class MarcService {
         StringBuilder newData = new StringBuilder();
 
         for (InputMarcRequest.InputMarcDto inputMarcDto : dataList) {
-            System.out.println("inputMarcDto.getData() = " + inputMarcDto.getData());
             String data = inputMarcDto.getData();
             int field_length = data.getBytes().length;
-            System.out.println("디렉토리개별값 = " + inputMarcDto.getIndicator()
-                    + String.format("%04d", field_length)
-                    + String.format("%05d", startPosition));
 
             newDirectory.append(inputMarcDto.getIndicator()).
                     append(String.format("%04d", field_length)).

@@ -2,6 +2,7 @@ package fis.marc.repository;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import fis.marc.domain.Marc;
+import fis.marc.domain.enumType.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -39,8 +40,10 @@ public class MarcRepository {
 
     public Optional<Marc> findOneCheckedRandom() {
         List<Marc> marcList = em.createQuery(
-                "select m from Marc m where m.worked is not null and m.checked is null",
+                "select m from Process p join p.marc m " +
+                        "where m.checked is null and p.status = :status",
                         Marc.class)
+                .setParameter("status", Status.Input)
                 .getResultList();
         return marcList.stream().findAny(); // 조회할 게 없을 때 예외처리 필요함.
     }
