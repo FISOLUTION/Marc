@@ -13,6 +13,7 @@ import fis.marc.dto.StatisticsResponse.WorkingAmount.WorkingAmountDto;
 import fis.marc.dto.StatisticsResponse.WorkingAmount.WorkingAmountMonthDto;
 import fis.marc.dto.UpdateUserRequest;
 import fis.marc.exception.DuplicateNicknameException;
+import fis.marc.repository.ManageRepository;
 import fis.marc.repository.ProcessRepository;
 import fis.marc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ProcessRepository processRepository;
+    private final ManageRepository manageRepository;
 
     @Transactional
     public void createUser(User user) {
@@ -60,7 +62,7 @@ public class UserService {
 
             int rejectedAmount = processRepository.findModifyAllByWorker(worker).size();
             int workingAmount = progressingWork.size();
-            Long averageWorkingAmount = workingAmount / betweenDays;
+            Double averageWorkingAmount = 1.0 * workingAmount / betweenDays;
             if (workingAmount == 0) workingAmount = 1;
             Double rejectedRate = (1.0 * rejectedAmount / workingAmount) * 100;
             System.out.println("rejectedAmount = " + rejectedAmount);
@@ -151,19 +153,21 @@ public class UserService {
 
     private void addPerformanceInfo(StatisticsResponse statisticsResponse) {
         int total = processRepository.findCheckedAll().size();
-        int goal = 50000;
-        int workingDay = 10;
+        Long goal = manageRepository.findAll().orElseThrow(() -> new IllegalStateException("goal 등록 필요 저장된 데이터가 없음")).getGoal();
+        String startDate = processRepository.findOldest()
+                .orElseThrow(() -> new IllegalStateException("시작 날짜 없음 - 공정 진행된 게 없음")).getCreatedDate();
+        Long workingDay = ChronoUnit.DAYS.between(LocalDate.parse(startDate), LocalDate.now()) + 1;
 
         double averageAmount = (total * 1.0 / workingDay);
 
-        int expectedWorkingDay;
+        Long expectedWorkingDay;
         if (averageAmount == 0) {
-            expectedWorkingDay = 999999999; // 목표량/하루평균 작업량 -> 총 예상 작업 일수
+            expectedWorkingDay = 999999999L; // 목표량/하루평균 작업량 -> 총 예상 작업 일수
         } else {
-            expectedWorkingDay = (int)(goal / averageAmount); // 목표량/하루평균 작업량 -> 총 예상 작업 일수
+            expectedWorkingDay = (long)(goal / averageAmount); // 목표량/하루평균 작업량 -> 총 예상 작업 일수
         }
 
-        int expectedRemainWorkingDay = expectedWorkingDay - workingDay;// 목표량/하루평균 작업량 -> 총 예상 남은 작업 일수
+        Long expectedRemainWorkingDay = expectedWorkingDay - workingDay;// 목표량/하루평균 작업량 -> 총 예상 남은 작업 일수
         String expectedFinishDate = LocalDate.now().plusDays(expectedRemainWorkingDay).toString();
 
         statisticsResponse.getWorkingAmount()

@@ -25,11 +25,20 @@ public class ProcessRepository {
         em.persist(process);
     }
 
-    public List<Process> findAllByUserId(Long userId) {
-        return em.createQuery("select p from Process p join fetch p.user u join fetch p.checker c " +
-                        "where u.id = :userId or c.id = :userId", Process.class)
-                .setParameter("userId", userId)
-                .getResultList();
+    public List<Process> findAllByUserId(User user, Authority authority) {
+        if (authority.equals(Authority.Worker)) {
+            return em.createQuery("select p from Process p " +
+                            "where p.user = :user", Process.class)
+                    .setParameter("user", user)
+                    .getResultList();
+        } else if (authority.equals(Authority.Checker)) {
+            return em.createQuery("select p from Process p " +
+                            "where p.user = :user", Process.class)
+                    .setParameter("user", user)
+                    .getResultList();
+        } else {
+            throw new IllegalStateException("Admin 에서 접근");
+        }
     }
 
     public List<Process> findWorkingAmountByUserId(Long userId) {
@@ -59,6 +68,15 @@ public class ProcessRepository {
                         "where p.marc = :marc and p.status = :status", Process.class)
                 .setParameter("marc", marc)
                 .setParameter("status", Status.Input)
+                .getResultList();
+        return processes.stream().findAny();
+    }
+
+    public Optional<Process> findCheckedOneByMarc(Marc marc) {
+        List<Process> processes = em.createQuery("select p from Process p " +
+                        "where p.marc = :marc and p.status = :status", Process.class)
+                .setParameter("marc", marc)
+                .setParameter("status", Status.Check)
                 .getResultList();
         return processes.stream().findAny();
     }
@@ -148,5 +166,12 @@ public class ProcessRepository {
                 "where p.user = :user and p.checker is not null", Process.class)
                 .setParameter("user", user)
                 .getResultList();
+    }
+
+    public Optional<Process> findOldest() {
+        return Optional.ofNullable
+                (em.createQuery("select p from Process p order by p.createdDate asc ", Process.class)
+                .setMaxResults(1)
+                .getSingleResult());
     }
 }

@@ -75,9 +75,9 @@ public class StatisticsResponse {
         @AllArgsConstructor
         public static class Performance {
             private int total;
-            private int goal;
-            private int workingDay;
-            private int expectedWorkingDay;
+            private Long goal;
+            private Long workingDay;
+            private Long expectedWorkingDay;
             private String expectedFinishedDate;
         }
     }

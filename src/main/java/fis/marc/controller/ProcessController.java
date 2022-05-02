@@ -15,8 +15,13 @@ import java.util.List;
 public class ProcessController {
     private final ProcessService processService;
 
+    /**
+     * @implNote
+     * @param userId
+     * @return
+     */
     @GetMapping("/marc/input/worklist/{userid}")
-    public WorkListResponse viewWorkList(@PathVariable("userid") Long userId) throws IllegalAccessException {
+    public WorkListResponse viewWorkList(@PathVariable("userid") Long userId) {
         return processService.findAllByUserId(userId);
     } // 입력 페이지 작업 목록 조회
 

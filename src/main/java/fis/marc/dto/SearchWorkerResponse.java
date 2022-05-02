@@ -19,7 +19,7 @@ public class SearchWorkerResponse {
     private String address;
     private String phnum;
     private int workingAmount;
-    private Long averageWorkingAmount;
+    private Double averageWorkingAmount;
     private Double rejectedRate;
     private List<TendencyDto> tendency = new ArrayList<>();
 
@@ -30,7 +30,7 @@ public class SearchWorkerResponse {
         private int workingAmount;
     }
 
-    public SearchWorkerResponse(Long userId, String nickname, String pwd, Authority auth, String username, String address, String phnum, int workingAmount, Long averageWorkingAmount, Double rejectedRate) {
+    public SearchWorkerResponse(Long userId, String nickname, String pwd, Authority auth, String username, String address, String phnum, int workingAmount, Double averageWorkingAmount, Double rejectedRate) {
         this.userId = userId;
         this.nickname = nickname;
         this.pwd = pwd;
