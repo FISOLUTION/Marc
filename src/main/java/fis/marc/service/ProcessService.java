@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,11 +25,13 @@ public class ProcessService {
     private final UserRepository userRepository;
 
     @Transactional
-    public WorkListResponse findAllByUserId(Long userId) throws IllegalAccessException {
-        userRepository.findOne(userId).orElseThrow(() -> new IllegalAccessException("존재하지 않는 유저아이디"));
+    public WorkListResponse findAllByUserId(Long userId) {
+        User findUser = userRepository.findOne(userId)
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저아이디"));
 
         WorkListResponse workList = new WorkListResponse();
-        List<Process> resultList = processRepository.findAllByUserId(userId);
+
+        List<Process> resultList = processRepository.findAllByUserId(findUser, findUser.getAuth());
         resultList.forEach((result) -> {
             Marc marc = result.getMarc();
             byte[] contentsBytes = marc.getOrigin().getBytes();

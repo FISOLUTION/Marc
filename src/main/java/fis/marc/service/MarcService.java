@@ -50,16 +50,20 @@ public class MarcService {
     public void saveWorked(Long marcId, Long userId, String str) {
         Optional<Marc> findMarc = marcRepository.findOne(marcId);
         Optional<User> findUser = userRepository.findOne(userId);
-        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 Marc 데이터"));
-        User user = findUser.orElseThrow(() -> new NoSuchElementException("존재하지 않는 User"));
+        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 Marc Id"));
+        User user = findUser.orElseThrow(() -> new NoSuchElementException("존재하지 않는 User Id"));
         marc.updateWorked(str);
         List<Process> modifiesByMarc = processRepository.findModifyOneByMarc(marc);
         if (modifiesByMarc.isEmpty()) {
-            Process process = new Process(LocalDate.now().toString(), Status.Input, marc, user);
-            processRepository.saveProcess(process); // 저장
+            processRepository.findWorkedOneByMarc(marc).ifPresentOrElse((process) -> {
+                throw new IllegalStateException("수정요청 아닌 데이터는 다시 접근 및 저장 불가");
+            }, () -> {
+                Process process = new Process(LocalDate.now().toString(), Status.Input, marc, user);
+                processRepository.saveProcess(process); // 저장되어있는 process 가 없으므로 새로 Input 상태 저장
+            });
         } else {
             modifiesByMarc.forEach((process) -> {
-                process.updateStatus(Status.Input);
+                process.updateStatus(Status.Input); // 수정요청인 경우 Input 상태로 되돌림
             });
         }
     }
@@ -68,11 +72,15 @@ public class MarcService {
     public void saveChecked(Long marcId, Long userId, String result, String comment) {
         Optional<Marc> findMarc = marcRepository.findOne(marcId);
         Optional<User> findUser = userRepository.findOne(userId);
-        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 Marc 데이터"));
+        Marc marc = findMarc.orElseThrow(() -> new NoSuchElementException("존재하지 않는 Marc id"));
         User user = findUser.orElseThrow(() -> new NoSuchElementException("존재하지 않는 User"));
         Optional<Process> findProcess = processRepository.findWorkedOneByMarc(marc);
         findProcess.orElseThrow(() -> new IllegalStateException("수정 요청한 데이터입니다. 수정이 완료되면 검수바랍니다."));
         findProcess.ifPresent((process) -> {
+            Optional<Process> checkedOneByMarc = processRepository.findCheckedOneByMarc(marc);
+            if (checkedOneByMarc.isPresent()) {
+                throw new IllegalStateException("이미 검수 완료된 Marc 데이터입니다.");
+            }
             processRepository.saveProcess(new Process(LocalDate.now().toString(), Status.Check, marc, user));
             marc.updateChecked(result);
             if (comment != null) {
@@ -114,7 +122,7 @@ public class MarcService {
     public ParseOneResponse parseCheckedOne() {
 
         Marc oneOfAll = marcRepository.findOneCheckedRandom()
-                .orElseThrow(() -> new NoExistParsableException("파싱할 origin 데이터가 없음"));
+                .orElseThrow(() -> new NoExistParsableException("파싱할 worked 데이터가 없음"));
         ParseOneResponse response = parse(oneOfAll.getWorked());
         response.setComment(oneOfAll.getComment());
         return response;
