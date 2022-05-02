@@ -13,7 +13,5 @@ public class UserServiceTest {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeek = today.with(WeekFields.of(Locale.KOREA).dayOfWeek(), 1);
         LocalDate endOfWeek = today.with(WeekFields.of(Locale.KOREA).dayOfWeek(), 7);
-        System.out.println("startOfWeek = " + startOfWeek);
-        System.out.println("endOfWeek = " + endOfWeek);
     }
 }

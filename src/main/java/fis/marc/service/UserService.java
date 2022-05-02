@@ -65,7 +65,6 @@ public class UserService {
             Double averageWorkingAmount = 1.0 * workingAmount / betweenDays;
             if (workingAmount == 0) workingAmount = 1;
             Double rejectedRate = (1.0 * rejectedAmount / workingAmount) * 100;
-            System.out.println("rejectedAmount = " + rejectedAmount);
 
             SearchWorkerResponse searchWorkerResponse = new SearchWorkerResponse(worker.getId(), worker.getNickname(), worker.getPwd(),
                     worker.getAuth(), worker.getUsername(), worker.getAddress(),
