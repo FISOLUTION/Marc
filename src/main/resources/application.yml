@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/Marc;
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://3.37.216.66:3306/fis_marc?useUnicode=true&characterEncoding=utf8
+    username: fis_marc
+    password: Fiserver1207!
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
